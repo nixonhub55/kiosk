@@ -1,0 +1,16 @@
+[
+    {
+        "id": "ald2Y0JTZXZZM21KNFRUWENTN3AzckViaUpPVHR0TEpWakRFQTZ6QWFKdz0=",
+        "ip": "127.0.0.1",
+        "device": "unkown device",
+        "browser": "Firefox",
+        "host": "msipf"
+    },
+    {
+        "id": "MFQ1V1A1WW9JUDZLZDBDcm14dXg4UT09",
+        "ip": "127.0.0.1",
+        "device": "WebKit",
+        "browser": "Edge",
+        "host": "mdb4"
+    }
+]
