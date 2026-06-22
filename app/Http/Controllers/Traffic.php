@@ -663,7 +663,7 @@ class Traffic extends Controller
 
     public function showLoginForm(Request $request){   
         
-        echo app()->version();
+        echo trim(shell_exec('git describe --tags --abbrev=0'));
         return;
          
         /*  
