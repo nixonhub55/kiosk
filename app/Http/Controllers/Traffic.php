@@ -663,8 +663,8 @@ class Traffic extends Controller
 
     public function showLoginForm(Request $request){   
         
-        echo config('version.version');
-        return;
+        $data['version'] = config('version.version');
+        echo $data['version'];
          
         /*  
                 $encKey = 'pf@20260620';
