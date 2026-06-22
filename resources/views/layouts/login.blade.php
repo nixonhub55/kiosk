@@ -298,7 +298,7 @@ header('Access-Control-Allow-Headers: Content-Type,x-prototype-version,x-request
 
                         <div class="row">
                             <small>
-                                <center>&copy; <?=date('Y')?> OGIS Philippines Inc. {{env('KIOSK_VERSION')}}</center>
+                                <center>&copy; <?=date('Y')?> OGIS Philippines Inc. {{$version}}</center>
                             </small> 
                         </div>
 

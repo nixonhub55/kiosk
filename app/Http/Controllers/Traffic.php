@@ -664,8 +664,7 @@ class Traffic extends Controller
     public function showLoginForm(Request $request){   
         
         $data['version'] = config('version.version');
-        echo $data['version'];
-         
+          
         /*  
                 $encKey = 'pf@20260620';
                 $request['hostName'] = $this->authentication->f_endecrypt($request['hostName'],'d',$encKey);
