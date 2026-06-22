@@ -661,12 +661,16 @@ class Traffic extends Controller
     }
 
 
-    public function showLoginForm(Request $request){    
+    public function showLoginForm(Request $request){   
+        
+        echo app()->version();
+        return;
          
-       /*  $encKey = 'pf@20260620';
-        $request['hostName'] = $this->authentication->f_endecrypt($request['hostName'],'d',$encKey);
- */
-           
+        /*  
+                $encKey = 'pf@20260620';
+                $request['hostName'] = $this->authentication->f_endecrypt($request['hostName'],'d',$encKey);
+        */
+                
          
         $INFRASTRUCTURE = env('INFRASTRUCTURE'); 
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 
