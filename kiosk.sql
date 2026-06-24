@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `schedulechangeapproverhistory` (
   `scID` VARCHAR(20) DEFAULT NULL,
   `scName` VARCHAR(50) NOT NULL,
   `scAppDate` DATE NOT NULL,
-  `scCosCenter` VARCHAR(50) NOT NULL,`mhcpsi_v4`
+  `scCosCenter` VARCHAR(50) NOT NULL, 
   `scReqDate` DATE NOT NULL,
   `scPreviousSched` VARCHAR(20) NOT NULL,
   `scSchedule` VARCHAR(20) NOT NULL,
@@ -2490,7 +2490,7 @@ DELIMITER ;
 
 
 
-DELIMITER $$  
+DELIMITER $$ 
 DROP PROCEDURE IF EXISTS `sp_leave_submit_application`$$ 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_leave_submit_application`(
     IN pint_mode INT, 
@@ -2503,11 +2503,11 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_leave_submit_application`(
     IN to_date VARCHAR(30),
     IN laReason TEXT,
     IN json_schedules TEXT,
+    IN rFileContent LONGTEXT,
     OUT num INT,
     OUT msg VARCHAR(300)
 )
 proc_start:BEGIN 
-
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 				GET DIAGNOSTICS CONDITION 1 @errorMessage = MESSAGE_TEXT;
@@ -2520,9 +2520,16 @@ proc_start:BEGIN
 	END;
 	
 	SET num = 0;
-	SET msg = '';
+	SET msg = 'Success';
 	
-	SET @daysPriorToLeave = IFNULL((SELECT daysPriorToLeave FROM companySetting),0);
+	
+	 
+	 DROP TABLE IF EXISTS tblJsonData; CREATE TABLE tblJsonData AS (SELECT json_schedules,rFileContent);
+	-- SELECT * FROM tblJsonData
+	-- SET @json_schedules = (SELECT json_schedules FROM tblJsonData);
+	-- SET @rFileContent = (SELECT rFileContent FROM tblJsonData);
+	
+	 
 	  
 	SET @newID = (SELECT laAppNo FROM leaveapplicationform WHERE laAppNo=la_LstAppNo AND laStatus='P'); 
 	SET @code=(SELECT CODE  FROM identity WHERE identityid=la_ID);   
@@ -2534,36 +2541,87 @@ proc_start:BEGIN
 			WHERE 
 			n.n < JSON_LENGTH(json_schedules)
 			),0);
+	SET @rFileContent = rFileContent;
+	
+	IF (@current>@bal) THEN
+		SET num = 1;
+		SET msg = CONCAT('{
+				"id":"lbl_leave_bal",
+				"msg":"Leave application failed. your current balance has a problem with your leave balance. please call admin!"	
+				}'
+		       ); 
+		LEAVE proc_start;
+	END IF;
+				
+	-- HOURS VALIDATION START
+	
+			SELECT `code`,identityId,la_type
+			INTO @code,@identityId,@leaveType
+			FROM identity
+			WHERE identityId=la_ID;
+			
+			
+			SELECT  t2.leaveUnit 
+			INTO @leaveUnit
+			FROM `employeeleavebalances` t1
+			LEFT JOIN `leave` t2 ON t1.leaveCode=t2.leaveCode
+			WHERE t1.code=@code AND  t1.leaveCode=@leaveType;
+			
+			DROP TEMPORARY TABLE IF EXISTS tmp_employeedailyschedule; 
+			CREATE TEMPORARY TABLE tmp_employeedailyschedule AS
+			SELECT t1.*,IFNULL(t2.equivalentHours,0.00) AS equivalentHours
+			FROM  `employeedailyschedule` t1 
+			LEFT JOIN scheduleshifts t2 ON t1.`schedule`=t2.`code`
+			WHERE t1.employeeId = @identityId AND IFNULL(@leaveUnit,'')='hours'; 
+			
+			SET @json_schedules = json_schedules;
+			 
+			
+			DROP TEMPORARY TABLE IF EXISTS tmpLeaves; 
+			CREATE TEMPORARY TABLE tmpLeaves AS
+			WITH RECURSIVE cte AS(
+			SELECT 0 AS n
+			UNION ALL
+			SELECT n+1 FROM cte
+			WHERE n + 1 < (
+					SELECT MAX(JSON_LENGTH(@json_schedules))  
+					)
+			)  
+			SELECT  JSON_EXTRACT(@json_schedules,CONCAT('$[',n,'].num'))AS num,
+				JSON_UNQUOTE(JSON_EXTRACT(@json_schedules,CONCAT('$[',n,'].date'))) AS `date`,
+				JSON_UNQUOTE(JSON_EXTRACT(@json_schedules,CONCAT('$[',n,'].val'))) AS val
+			FROM cte;
+			
+			
+			SELECT SUM((t2.equivalentHours * val))
+			INTO @totalHours
+			FROM tmpLeaves t1
+			LEFT JOIN tmp_employeedailyschedule t2 ON t1.`date`=t2.day;
+			
+			IF ((IFNULL(@totalHours,0)>0) AND ((@bal-@totalHours)<0)) THEN 
+				SET num = 1;
+				SET msg = CONCAT('{
+						"id":"lbl_leave_bal",
+						"msg":"You dont have enough balance for ',@totalHours,' hours of leave!"	
+						}'
+				       ); 
+				LEAVE proc_start;
+			END IF;  
+			-- SET num = 1; SET msg = CONCAT('{ "id":"lblReason", "msg":"oks na!"  }');  LEAVE proc_start; 
+	-- HOURS VALIDATION END
+			
+	IF (@newTot>=3 AND @rFileContent IN ('','[]') AND la_type = 'SL') THEN
+		SET num = 1;
+		SET msg = '{
+			"id":"lblAttachment",
+			"msg":"Leave more than equal 3 days required attachment(s)!"	
+		       }';  
+		LEAVE proc_start;
+	END IF;
  
 	 
 	 
 	SET @IsSL = (SELECT 1 FROM `leave` WHERE leaveCode=la_type AND leaveName LIKE '%sick%');
-	
-	
-	
-	SET @json_schedules = json_schedules; 
-	DROP TEMPORARY TABLE IF EXISTS tempTblDates;
-	CREATE TEMPORARY TABLE tempTblDates AS(
-		WITH RECURSIVE cte AS(
-		SELECT 0 AS n
-		UNION ALL
-		SELECT n+1 FROM cte
-		WHERE n + 1 < (SELECT JSON_LENGTH(@json_schedules))
-		) SELECT (JSON_UNQUOTE(JSON_EXTRACT(@json_schedules,CONCAT('$[',n,'].date'))))AS dates
-		FROM cte t1 
-	);
-	
-	SET @mindate = (SELECT MIN(dates) FROM tempTblDates);
-	SET @daysdeff = (SELECT DATEDIFF(@mindate, DATE(NOW()))); 
-	IF (@daysPriorToLeave>0 AND @daysdeff<@daysPriorToLeave AND la_type LIKE '%VL%') THEN
-		SET num = 1;
-		SET msg = CONCAT('{
-			"id":"lbl_latodate",
-			"msg":"Invalid date leave[',@mindate,']. Days prior to leave should be ',@daysPriorToLeave,' days before"	
-		       }');  
-		LEAVE proc_start;
-	
-	END IF;
 	
 	IF (@IsSL=1 AND to_date>DATE(NOW()))THEN 
 	    SET num = 1;
@@ -2596,7 +2654,7 @@ proc_start:BEGIN
         END IF;
       
       -- la_LstAppNo
-       IF ((@bal<=0 OR @bal<@newTot)) THEN 	
+       IF ((@bal<=0 OR @bal<@newTot OR @current<=0)) THEN 	
 	    SET num = 1;
 	    SET msg = CONCAT('{
 				"id":"lbl_leave_bal",
@@ -2605,7 +2663,7 @@ proc_start:BEGIN
 	     LEAVE proc_start;
         END IF;
         
-        
+        /*
        
         IF (la_location='') THEN
 	
@@ -2616,6 +2674,7 @@ proc_start:BEGIN
 		       }'; 
 	    LEAVE proc_start;
         END IF;
+        */
         
         IF (from_date='') THEN
 	
@@ -2700,28 +2759,29 @@ proc_start:BEGIN
 	
 	IF (pint_mode=1) THEN
 		START TRANSACTION; 
+		
 		SET @fullname =(SELECT (CONCAT(firstname,' ',middlename,' ',lastname))  FROM identity WHERE identityid=la_ID); 
 		SET @costcode=( SELECT MAX(costcode) FROM employeemovement WHERE CODE=@code);
 		SET @depcode=( SELECT MAX(departmentcode) FROM employeemovement WHERE CODE=@code);
 		SET @batchid=(SELECT batchid FROM identity WHERE identityId=la_ID);  
-		SET @locationname =(SELECT locationname  FROM location WHERE locationcode=la_location);   
+		SET @locationname =IFNULL((SELECT locationname  FROM location WHERE locationcode=la_location),'');   
 		SET @TotDays=0;
-		SET @leaveBalance=0;
-	 
-	 
+		SET @leaveBalance=0; 
+		
 		IF (la_LstAppNo=0)  THEN
 		 
-			INSERT INTO leaveapplicationform(laID,laName,laCosCenter,laAppDate,laType,laDateFrom,laDateTo,laTotalDays,laBalance,laReason,laStatus,laBalanceCode,department,batchId,location,locationName) 
+			INSERT INTO leaveapplicationform(laID,laName,laCosCenter,laAppDate,laType,laDateFrom,laDateTo,laTotalDays,laBalance,laReason,laStatus,laBalanceCode,department,batchId,location,locationName,equivalentHours) 
 			SELECT la_ID AS laID,@fullname AS laName,@costcode AS laCosCenter,DATE(NOW()) AS laAppDate,la_type AS laType, 
 				from_date AS laDateFrom, to_date AS laDateTo,@TotDays AS laTotalDays,@leaveBalance AS laBalance,laReason AS laReason,
 				'P' AS laStatus,@code AS laBalanceCode, @depcode AS department,@batchid AS batchId,la_location AS location,
-				@locationname AS locationName;
+				@locationname AS locationName,@totalHours;
 				
 			 
 		ELSE	
 			SET @return_sched = (SELECT SUM(laSched) FROM leaveapplicationlist WHERE laLstAppNo=la_LstAppNo); 
 			SET @oldLaType = (SELECT laType FROM leaveapplicationform WHERE laAppNo=la_LstAppNo);
 			SET @oldlaTotalDays = (SELECT laTotalDays FROM leaveapplicationform WHERE laAppNo=la_LstAppNo);
+			SET @equivalentHours = (SELECT equivalentHours FROM leaveapplicationform WHERE laAppNo=la_LstAppNo);
 			
 			UPDATE leaveapplicationform
 			SET laID=la_ID
@@ -2738,31 +2798,59 @@ proc_start:BEGIN
 			   ,batchId=@batchid
 			   ,location=la_location
 			   ,locationName=@locationname
+			   ,equivalentHours=@totalHours
 			WHERE laAppNo=la_LstAppNo;
 			 
 			IF (@oldLaType<>la_type) THEN
-			
-				UPDATE employeeleavebalances
-				-- SET currentBalance = (leaveBalance + @oldlaTotalDays)
-				SET currentBalance = (currentBalance + @oldlaTotalDays)
+				-- 
+				UPDATE employeeleavebalances 
+				-- SET currentBalance = (currentBalance + @oldlaTotalDays)
+				SET currentBalance = (CASE 
+							  WHEN IFNULL(@leaveUnit,'')='hours' THEN (currentBalance + @totalHours)
+							  ELSE (currentBalance + @oldlaTotalDays)
+							END)
 				WHERE `code` = @code AND leaveCode = @oldLaType;
 			ELSE
-			
+				 
+				
 				UPDATE employeeleavebalances 
-				SET currentBalance = currentBalance+@oldlaTotalDays
+				SET currentBalance = currentBalance+IFNULL(@equivalentHours,@oldlaTotalDays)
 				WHERE `code` = @code AND leaveCode = la_type;
 			
 			END IF;
 			 
 		END IF;
 	 
-		SET @laAppID=(SELECT MAX(laAppNo) FROM leaveapplicationform WHERE laID=la_ID AND laType=la_type); 
-		SET @laAppID=(CASE WHEN la_LstAppNo>0 THEN la_LstAppNo ELSE @laAppID END);
+		SET @laAppID=(SELECT MAX(laAppNo) FROM leaveapplicationform WHERE laID=la_ID AND laType=la_type);  
+		SET @laAppID=(CASE WHEN la_LstAppNo=0 THEN @laAppID ELSE la_LstAppNo END);
 		SET @currentBalance = (SELECT leaveBalance FROM employeeleavebalances WHERE `code`=@code AND leaveCode=la_type);
 		DELETE FROM leaveapplicationlist WHERE laLstAppNo=@laAppID;
-		SET msg = @laAppID;	 
-		INSERT INTO leaveapplicationlist (laLstAppNo,laLstDate,laLstID,id,laSched,laBalAsOf,laBalance,laLstType,laLstDescription)
-		SELECT *
+		-- SET msg = @laAppID;	
+		
+		IF (@rFileContent NOT IN ('','[]')) THEN
+			UPDATE leave_attachments SET visibility = 0 WHERE laAppNo=@laAppID;
+			INSERT INTO leave_attachments (laAppNo,fileContent)
+			SELECT @laAppID,@rFileContent; 
+			
+		END IF;
+		
+		 
+		INSERT INTO leaveapplicationlist (laLstAppNo,laLstDate,laLstID,id,laSched,laBalAsOf,laBalance,laLstType,laLstDescription,equivalentHours)
+		SELECT  t1.laLstAppNo,
+			t1.laLstDate,
+			t1.laLstID,
+			t1.id,
+			t1.laSched,
+			t1.laBalAsOf, 
+			-- laBalance,
+			(CASE 
+				-- WHEN IFNULL(@leaveUnit,'')='hours' THEN ((t1.laBalAsOf-t1.laBalance)*(t2.equivalentHours * laSched))
+				WHEN IFNULL(@leaveUnit,'')='hours' THEN FORMAT(laBalAsOf-SUM(t2.equivalentHours * laSched) OVER (PARTITION BY id ORDER BY laLstDate),2)
+				ELSE t1.laBalance
+			 END),
+			la_type,
+			'',
+			(t2.equivalentHours * laSched)AS equivalentHours
 		FROM(
 			SELECT *,FORMAT(laBalAsOf-SUM(laSched) OVER (PARTITION BY id ORDER BY laLstDate),2) AS laBalance,la_type,''
 			FROM(
@@ -2777,27 +2865,34 @@ proc_start:BEGIN
 				WHERE 
 				    n.n < JSON_LENGTH(json_schedules)
 			    )t1
-		    )t1;
-		  
+		    )    
+		t1
+		LEFT JOIN tmp_employeedailyschedule t2 ON t1.laLstDate=t2.day  AND IFNULL(@leaveUnit,'')='hours' 
+		;
+		 
 		SET @max_df = (SELECT MIN(laLstDate) FROM leaveapplicationlist WHERE laLstAppNo=@laAppID);
 		SET @max_dt = (SELECT MAX(laLstDate) FROM leaveapplicationlist WHERE laLstAppNo=@laAppID);
 		
-		UPDATE employeeleavebalances
-		SET currentBalance = (currentBalance - @newTot)
+		 
+		UPDATE employeeleavebalances 
+		SET currentBalance = (CASE 
+					 WHEN IFNULL(@leaveUnit,'')='hours' THEN (currentBalance - @totalHours)	
+					 ELSE (currentBalance - @newTot)
+				      END)
 		WHERE `code` = @code AND leaveCode = la_type;
 		
 		
 		-- SET @newBalance = ((SELECT currentBalance FROM employeeleavebalances WHERE `code`=@code AND leaveCode=la_type)-@newTot);
+		 
 		SET @newBalance = (SELECT MIN(laBalance) FROM leaveapplicationlist WHERE laLstAppNo=@laAppID );
-		
+		-- SET num = 1; SET msg = CONCAT('{ "id":"lblReason", "msg":"',@laAppID,'!"  }'); ROLLBACK; LEAVE proc_start; 
 		UPDATE leaveapplicationform 
 		SET laTotalDays=@newTot, 
 		    laBalance=@newBalance,
 		    laDateFrom=@max_df,
 		    laDateTo=@max_dt
 		WHERE laAppNo=@laAppID;
-		 
-		CALL sp_approval_insert(1,@laAppID,la_ID,@num1, @msg1); 
+		CALL sp_approval_insert(1,@laAppID,la_ID,@num1, @msg1);  
 		COMMIT;
 	END IF; 
 	 
@@ -2805,7 +2900,6 @@ proc_start:BEGIN
     
 END$$ 
 DELIMITER ;
-
  
  
 -- CALL sp_portal_get_posted_dtr_dates (0,'0601200033',@num,@msg); SELECT @msg;
