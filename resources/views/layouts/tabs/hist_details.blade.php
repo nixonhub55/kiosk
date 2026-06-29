@@ -116,7 +116,6 @@
             $app_detail = $app_details['rows'][0]; 
             $appNo = $app_detail->laAppNo;
             $appStatus = $app_detail->r_decision;
-
         ?>
         <form class="row g-3">
             <div class="col-md-12">
@@ -221,8 +220,10 @@
                                                 <td>{{$rows->laSchedDesc}}</td>
                                                 <td> 
                                                     @if($dateToday<=$rows->laLstDate) 
-                                                    @endif
-                                                    <i class="bi bi-x-circle-fill text-danger" onclick="return deleteLeave('{{$appNo}}','{{$rows->laLstID}}','{{$rows->laLstDate}}')"></i></button> 
+                                                    @endif   
+                                                    @if(session()->get('hostName')=="pocpf")
+                                                      <i class="bi bi-x-circle-fill text-danger" onclick="return deleteLeave('{{$appNo}}','{{$rows->laLstID}}','{{$rows->laLstDate}}')"></i></button>
+                                                    @endif 
                                                 </td>
                                           </tr> 
                                           <?php
@@ -259,7 +260,8 @@
                                           }
                                     }
                               </script> 
-                              @if ($dateToday < $leave_startDate && $app_detail->r_decision=="A" && $hostName=="mdb4")  
+                              
+                              @if ($dateToday < $leave_startDate && $app_detail->r_decision=="A" && $hostName=="msipf") 
                                     <div class="container form-control">
                                           <div class="row">
                                                 <label for="txtCancelRemarks" id="lbltxtCancelRemarks"></label>
