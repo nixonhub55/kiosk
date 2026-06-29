@@ -1337,6 +1337,7 @@ class Traffic extends Controller
  
 
         if ($num == 1) { //LEAVE  
+            $data['holidays'] = $this->authentication->sp_get_holidaysholiday([0]);
             $data['sched_list'] = $this->leave_model->sp_leave_get_request_list([0, $id]); 
         }
         if ($num == 3) { //OFFICIAL BUSINESS 

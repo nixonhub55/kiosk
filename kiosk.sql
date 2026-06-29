@@ -2958,8 +2958,8 @@ DELIMITER ;
 
 
 -- CALL sp_application_info(0,2,0,'0601200016','P','','',@num,@msg); SELECT @msg
-DELIMITER $$  
-DROP PROCEDURE IF EXISTS `sp_application_info`$$ 
+DELIMITER $$ 
+DROP PROCEDURE IF EXISTS `sp_application_info`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_application_info`( 
     IN pint_mode INT,	
     IN switch INT, 
@@ -2971,7 +2971,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_application_info`(
     OUT num INT,
     OUT msg VARCHAR(300)
 )
-BEGIN 
+proc_start:BEGIN 
 	SET num = 0;
 	SET msg = 'Success';
 	
@@ -2988,12 +2988,30 @@ BEGIN
          SET @leftJoin=(CASE 
 			  WHEN @document='overtime' THEN 'LEFT JOIN overtimeform t2 on t1.appNo=t2.otAppNo'
 		          WHEN @document='leave' THEN 'LEFT JOIN leaveapplicationform t2 on t1.appNo=t2.laAppNo'
-		          WHEN @document='timeadjustment' THEN 'LEFT JOIN timeadjustmentform t2 on t1.appNo=t2.taAppNo'
+		          WHEN @document='timeadjustment' THEN 'LEFT JOIN timeadjustmentform t2 on t	1.appNo=t2.taAppNo'
 		          WHEN @document='officialbusiness' THEN 'LEFT JOIN officialbusinessform t2 on t1.appNo=t2.obAppNo'
 		          WHEN @document='offset' THEN 'LEFT JOIN offsetform t2 on t1.appNo=t2.osAppNo'
 		          WHEN @document='timeentry' THEN 'LEFT JOIN timeentryform t2 on t1.appNo=t2.teAppNo' 
 		          WHEN @document='schedulechange' THEN 'LEFT JOIN schedulechange t2 on t1.appNo=t2.scAppNo' 
 		          WHEN @document='hrdcert' THEN 'LEFT JOIN hrdcertificate t2 on t1.appNo=t2.appNo' 
+		      END);
+	
+	SET @additionalColumns = (CASE  
+					  WHEN @document='offset' THEN ',(SELECT fn_offset_ot_id(osReference,osID)) as osOtAppNo' 
+					  ELSE ''
+				  END);	      
+				    
+		      
+       SET @appDates=(CASE 
+			  WHEN @document='overtime' THEN 't2.otDate as dateFrom,t2.otDate as dateTo'
+		          WHEN @document='leave' THEN 't2.laDateFrom as dateFrom,t2.laDateTo as dateTo'
+		          WHEN @document='timeadjustment' THEN 't2.taDate as dateFrom,t2.taDate as dateTo'
+		          WHEN @document='officialbusiness' THEN 't2.obDateFrom as dateFrom,t2.obDateTo as dateTo'
+		          WHEN @document='offset' THEN 't2.osDateFrom as dateFrom,t2.osDateTo as dateTo'
+		          WHEN @document='timeentry' THEN 't2.teDate as dateFrom,t2.teDate as dateTo' 
+		          -- WHEN @document='schedulechange' THEN 't2.scReqDate as dateFrom,t2.scReqDate as dateTo' 
+		          WHEN @document='schedulechange' THEN 't2.scReqDate as dateFrom,t2.scReqDate as dateTo' 
+		          WHEN @document='hrdcert' THEN 't2.requestDate as dateFrom,t2.requestDate as dateTo' 
 		      END);
 		      
 		     
@@ -3018,7 +3036,7 @@ BEGIN
 		          WHEN @document='officialbusiness' THEN 't2.obAppDate'
 		          WHEN @document='offset' THEN 't2.osAppDate'
 		          WHEN @document='timeentry' THEN 't2.teAppDate' 
-		          WHEN @document='schedulechange' THEN 't2.scAppDate' 
+		          WHEN @document='schedulechange' THEN 't2.scReqDate' 
 		          WHEN @document='hrdcert' THEN 't2.requestDate' 
 		      END);
          
@@ -3065,11 +3083,13 @@ BEGIN
 	DROP TEMPORARY TABLE IF EXISTS temp_approval;     
 	SET @sql = CONCAT(' 	
 				CREATE TEMPORARY TABLE temp_approval AS
-				SELECT DISTINCT t1.appNo as r_appNo,	t1.document as r_document,',IF(rAppNo>0,'t1.templateCode as r_templateCode,',''),'	t1.templateLineId as r_templateLineId,	t1.id as r_id,	t1.approver as r_approver,	t1.approverName as r_approverName,	t1.decision as r_decision,	t1.remarks as r_remarks,	t1.approvedDate as r_approvedDate,	t1.prevTemplateCode as r_prevTemplateCode
+				SELECT DISTINCT t1.appNo as r_appNo,	t1.document as r_document,',IF(rAppNo>0,'t1.templateCode as r_templateCode,',''),'	t1.templateLineId as r_templateLineId,	t1.id as r_id,	t1.approver as r_approver,	t1.approverName as r_approverName,	t1.decision as r_decision,	t1.remarks as r_remarks, DATE_FORMAT(t1.approvedDate, ''%Y-%m-%d %h:%i:%s %p'') as r_approvedDate,	t1.prevTemplateCode as r_prevTemplateCode
 					,t4.txt as r_status
 					,t2.*,',@center,' as center 
-					,',@appDate,' as appDate
-					-- ,stdtls.`id` as AuthId
+					,',@appDates,'
+					,',@center,' as appDate
+					-- ,stdtls.`id` as AuthId 
+					',@additionalColumns,'
 				FROM approval t1
 				 ', @leftJoin, '
 				LEFT JOIN (
@@ -3109,7 +3129,7 @@ BEGIN
 				END),' 
 			'); 
 	
-	-- SELECT @sql;
+	-- SELECT @sql; LEAVE proc_start;
 	PREPARE stmt FROM @sql;
 	EXECUTE stmt;
 	DEALLOCATE PREPARE stmt;
@@ -3124,7 +3144,7 @@ BEGIN
 	 
  
 	 
-	SELECT  t1.*
+	SELECT DISTINCT  t1.*
 	       ,identity.fullName
 	       ,payrollperioddetails.payrollPeriodApproverLocked  AS approverLocked 
 	       ,dep.departmentName
@@ -3145,18 +3165,17 @@ BEGIN
 	(CASE WHEN payrollperiod.PayrollPeriodType='Semi-Monthly' THEN 'SM' 
 	WHEN payrollperiod.PayrollPeriodType='Monthly' THEN 'MO'
 	WHEN payrollperiod.PayrollPeriodType='Weekly' THEN 'WK' END)
-	AND YEAR(t1.appDate) = payrollperiod.`payrollPeriodYear`
+	AND YEAR(t1.dateFrom) = payrollperiod.`payrollPeriodYear`
 	AND identity.payrollPeriodID = payrollperiod.`payrollPeriodID`
 	
 	
 	LEFT JOIN payrollperioddetails ON
 	payrollperiod.code = payrollperioddetails.code
-	AND payrollperioddetails.payrollPeriodFrom <= t1.appDate
-	AND payrollperioddetails.payrollPeriodTo >= t1.appDate  
+	AND payrollperioddetails.payrollPeriodFrom <= t1.dateFrom
+	AND payrollperioddetails.payrollPeriodTo >= t1.dateTo  
 	;
           
 END$$
-
 DELIMITER ;
  
   

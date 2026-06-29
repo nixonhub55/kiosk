@@ -1,6 +1,9 @@
  
 <div class="container custom-container">
 <?php
+
+use PhpParser\Node\Stmt\Echo_;
+
       $appNo = 0;
       $appStatus = 0;
 ?>
@@ -116,7 +119,8 @@
             $app_detail = $app_details['rows'][0]; 
             $appNo = $app_detail->laAppNo;
             $appStatus = $app_detail->r_decision;
-
+            $holidays = $holidays['rows'];
+            //echo json_encode($holidays);
         ?>
         <form class="row g-3">
             <div class="col-md-12">
@@ -212,17 +216,22 @@
                                     </thead>  
                                     <tbody> 
                                     @foreach($sched_list['rows'] as $rows) 
-                                          <?php
+                                          <?php  
                                                 $disabled = 1;
+                                                $dateToCheck = $rows->laLstDate;
+                                                $isHoliday = !empty(array_filter($holidays, function ($holiday) use ($dateToCheck) {
+                                                            return $holiday->holidayDate === $dateToCheck;
+                                                            }));
                                           ?>
                                           <tr>
                                                 <td>{{$rows->laLstID}}</td>
                                                 <td>{{$rows->laLstDate}} - {{$rows->laLstDateDesc}}</td>
                                                 <td>{{$rows->laSchedDesc}}</td>
                                                 <td> 
+                                                     
                                                     @if($dateToday<=$rows->laLstDate) 
-                                                    @endif   
-                                                    @if(session()->get('hostName')=="pocpf")
+                                                    @endif    
+                                                   @if(($isHoliday || $dateToday<=$rows->laLstDate) && session()->get('hostName')=="pocpf")
                                                       <i class="bi bi-x-circle-fill text-danger" onclick="return deleteLeave('{{$appNo}}','{{$rows->laLstID}}','{{$rows->laLstDate}}')"></i></button>
                                                     @endif 
                                                 </td>
