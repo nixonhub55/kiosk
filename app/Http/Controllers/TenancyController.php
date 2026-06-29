@@ -100,8 +100,7 @@ class TenancyController extends Controller
 
         session()->put('hostName', value:$hostName); 
         session()->put('active', value:1); 
-        return redirect(env('APP_URL').'?hostName='.$hostName); 
-        //return redirect('https://pf.'.env('VIRTUAL_SERVER2').'.ph/kiosk?hostName='.$hostName); 
+        return redirect(env('APP_URL').'?hostName='.$hostName);  
     }  
 
 }
