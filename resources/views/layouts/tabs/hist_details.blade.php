@@ -116,6 +116,7 @@
             $app_detail = $app_details['rows'][0]; 
             $appNo = $app_detail->laAppNo;
             $appStatus = $app_detail->r_decision;
+
         ?>
         <form class="row g-3">
             <div class="col-md-12">

@@ -160,7 +160,7 @@
             $laStatus= $rows->laStatus; 
        }  
 
-      //echo json_encode($sched_list);
+      //echo json_encode($holidays);
       //echo "<script>alert('".$laReason."')</script>";
       
 ?> 

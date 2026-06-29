@@ -1,11 +1,13 @@
-{
+ {
     "lessonFilesPath" : "storage/lessons/", 
     "adminUrl" : "http://admin.payfactor.ft:8080/", 
     "reportUrl" : "http://mdb4.payfactor.ft:86/", 
-    "kioskPath" : "http://mdb4.payfactor.ft:8083/portal/",
-    "learningcenter" : "http://mdb4.payfactor.ft:8083/lms/",
-    "recruiment" : "http://mdb4.payfactor.ft:8083/rbp/",
+    "kioskPath" : "https://pf.smartbooks.ph/kiosk/",
+    "learningcenter" : "https://pf.smartbooks.ph/lms/",
+    "recruiment" : "https://pf.smartbooks.ph/rbp/",
     "dashboard" : "http://test/lms/",
-    "subdomain" : ".payfactor.ft"
+    "subdomain" : ".smartbooks.ph"
 }
+
+
 

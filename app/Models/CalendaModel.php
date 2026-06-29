@@ -123,7 +123,7 @@ class CalendaModel extends Model
                                 <i style='color:blue'><u>".$currentUrl."</u></i>
                                 "]; 
             $email['footer']=["<b style='color:red'>Note</b>:<i>We cannot recieve your reply here. Thank you!</i>"]; 
-            $this->authentication->sendEmail(new Request($email));
+             $this->authentication->sendEmail(new Request($email));
          } 
  
          return $str;

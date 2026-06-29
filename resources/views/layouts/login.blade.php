@@ -93,8 +93,10 @@ header('Access-Control-Allow-Headers: Content-Type,x-prototype-version,x-request
      $companyLogoBlob = $company_customization['rows'][0]->companyLogoBlob;
      $isDefault = [$company_customization['rows'][0]->isDefault];
 
-     //echo json_encode($company_customization['rows']);
-    
+     if(session()->get('hostName')=="msipf"){
+        $companyLogoBlob = "https://msipf.smartbooks.ph/assets/img/logo_698fbdf7537792.20520811.png";
+     }
+     
     ?>
 <body>
 

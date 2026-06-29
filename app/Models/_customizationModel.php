@@ -55,7 +55,7 @@ class customizationModel extends Model
         $extracted_db = [];
  
 
-        $client_db[] =["hostName" => "mdb4", "dbName" => "mdb_demo_v4"];
+         
         $client_db[] =["hostName" => "msipf", "dbName" => "materials_solutions_inc"];
         $client_db[] =["hostName" => "pfstand", "dbName" => "aaisiv4"];
         $client_db[] =["hostName" => "ftlive4", "dbName" => "cambe_dental_inc"];

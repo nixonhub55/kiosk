@@ -244,12 +244,11 @@
             formData.append('schedules',JSON.stringify(schedules)); 
              
             const response = await exec_XMLHttpRequest(formData,'{{url("/call_ajax")}}');   
-            
+            console.log(response);  
             var vfbox = this_should_be_verified('verification_checkbox');  
 
             if (pint_mode==0){
                   if (response.num!==0){
-                        console.log(response);
                         var id = JSON.parse(response.msg).id;
                         if (id!== undefined){  
                               console.log(id);

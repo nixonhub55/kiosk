@@ -661,16 +661,11 @@ class Traffic extends Controller
     }
 
 
-    public function showLoginForm(Request $request){   
+    public function showLoginForm(Request $request)
+    {        
         
         $data['version'] = config('version.version');
-        //TEST CHANGES
-        /*  
-                $encKey = 'pf@20260620';
-                $request['hostName'] = $this->authentication->f_endecrypt($request['hostName'],'d',$encKey);
-        */
-                
-         
+        
         $INFRASTRUCTURE = env('INFRASTRUCTURE'); 
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 
             ? "http://"
@@ -735,284 +730,6 @@ class Traffic extends Controller
         
         $data['mode'] = "login"; 
         return view('layouts.login', $data); 
-    }
-
-      //login post
-    public function login(Request $request){  
- 
-  
-            $start  = microtime(true);
-           
-            if(session()->get('is_authenticated')){
-                return redirect()->route('dash_cust'); 
-            }
-            
-            $_SESSION["detailsApproverHistory"] = 0;
-            $request->validate([
-                'username' => 'required',
-                'password' => 'required',
-                'database' => 'required',
-            ]);
-
-
-            $username = $request->input('username');
-            $password = $request->input('password');
-            $database = $request->input('database');
-
-
-            $setupIncomplete = $this->authentication->sp_kiosk_lookups([0]);  
-            if(!empty($setupIncomplete['rows'][0]->error_msg)){  
-                echo '<div style="background-color: #FA555A; padding:20px; color:white;width:500px">
-                    <h1>Dear, Pay Factor Team</h1>
-
-                    <div>The system cannot continue because the following errors were detected due to incomplete patching of SQL in production server:</div>
-                
-                    <div style="background-color:#4A3738; font-size:13px; padding:10px; margin-top:10px;margin-bottom:10px">'.$setupIncomplete['rows'][0]->error_msg.'</div>
-                Please review and resolve these issues before attempting to proceed.
-                </div>'; 
-                return;
-            } 
-            
-            session()->put('database', $database);
-
-            DB::purge('mysql');
-            config(['database.connections.mysql.database' => $database]);
-            DB::reconnect('mysql');
-
-            //if password not encrypted or new registered using bulk upload
-            $userdetails = $this->authentication->authenticate_account_per_user($username);
-            if(count($userdetails)!==0){
-                $isPassEncrypted =($this->authentication->f_endecrypt($userdetails['password'], 'd', $username));
-                if($isPassEncrypted==""){ 
-                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','New user / Password need to update',$start); 
-                    session()->put('passwordStatus', 'new');
-                    session()->put('username', $username);
-                    return redirect()->route('new_password');
-                }
-            }
-
-
-            $companyPasswordSettings = $this->company_password->get_company_password_details();
-            $captchaCode = $request->input('captcha_code') ?? null;
-
-    
-            if (isset($companyPasswordSettings['enableCaptcha']) && $captchaCode==null) {
-                $this->authentication->sp_userAuditTrails(1,'Login','Warning','Captha Required',$start); 
-                return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Captch is required']);  
-            }
-            
-            if ($captchaCode) {
-                $correctCaptcha = Session::get('captcha') ?? null;
-                if ($captchaCode != $correctCaptcha) {  
-                    $this->authentication->setCaptchaAttempt(1);
-                    $num = session()->get('captcha_attemp'); 
-                    $wait_until = session()->get('wait_until'); 
-                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','Incorrect Captha',$start); 
-                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Incorrect captcha. '.$num.' attempt(s)']); 
-                }else{
-                    session()->put('multi', value : null);
-                    $this->authentication->setCaptchaAttempt(0);
-                }
-            }  
-             
-
-            $e_username = $this->authentication->f_endecrypt($username, 'e', $username);
-            $e_password = $this->authentication->f_endecrypt($password, 'e', $username);
-            
-
-            $iAddress = $this->authentication->getIPAddress();
-            
-            $companyPasswordSettings['password'] = $this->authentication->f_endecrypt($companyPasswordSettings['password'], 'd', 'ftsi');
-            $default_mailer = $this->authentication->sp_get_default_mailer([0]);
-
-            session()->put('companyPasswordSettings', value: $companyPasswordSettings);
-            
-            $default_mailer['rows'][0]->smtp_pass = $this->authentication->f_endecrypt($default_mailer['rows'][0]->smtp_pass, 'd', 'ftsi');
-            session()->put('default_mailer', value: $default_mailer['rows'][0]);
-            
-            
-            $data['authenticate'] = $this->authentication->authenticate_account($username, $e_password);
-            $data['user_exists'] = $this->authentication->check_if_username_exists($username);
-            session()->put('username', $username);
-            
-            if(empty($data['user_exists'])){
-             $this->authentication->sp_userAuditTrails(1,'Login','Warning','Invalid Username:'.$username.' or Password ???',$start); 
-             return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Invalid Username or Password!']); 
-            }
-    
-         
-            // ***************************** lockout feature ******************* 
-            $attempt = $this->password_model->sp_portal_get_lock_attempt($username);  
-            $attempt = $attempt['rows'][0]->attempts;
-            
-            
-            $lockoutType = $this->password_model->sp_portal_get_lockedOutRecoveryType();
-            $lockoutType = $lockoutType['rows'][0]->lockedOutRecoveryType;
-
-            $is_already_locked = $this->password_model->get_employee_lockout_auto_status($username);
-  
-            
-            if($is_already_locked){  // if access already locked 
-                $this->authentication->sp_userAuditTrails(1,'Login','Warning',"Account Locked with attempt count -> ".($attempt+1),$start);
-                if ($lockoutType == 'auto') { 
-                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Account Locked Please Try Again Later.']);
-                }else{ 
-                   return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Your account has been locked out. Contact your system admin.']);
-                } 
-            } 
-             
-
-            if (!empty($data['authenticate'])) {
-
-                $is_already_locked = $this->password_model->get_employee_lockout_auto_status($username); 
-                if($is_already_locked){  // if access already locked 
-                    $this->authentication->sp_userAuditTrails(1,'Login','Warning',"Account Locked with attempt count -> ".($attempt+1),$start);
-                    if ($lockoutType == 'auto') { 
-                        return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Account Locked Please Try Again Later.']);
-                    }else{ 
-                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Your account has been locked out. Contact your system admin.']);
-                    } 
-                } 
-
-
-                $passwordReuseCount = $this->password_model->sp_portal_get_user_password_logs($username, $e_password);
-
-                $passwordReuseCountString = $passwordReuseCount['rows'][0]->passwordCount;
-
-                if ($passwordReuseCountString == 0 || $passwordReuseCountString == null) {
-                    $this->password_model->sp_portal_insert_password_logs($username, $e_password);
-
-                }
-                 
-                $isExpired = $this->password_model->isPasswordExpired($username);
-                if ($isExpired) {
-                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','Password Expired',$start); 
-                    session()->put('username', $username);
-                    session()->put('passwordStatus', 'expired');
-                    return redirect()->route('new_password');
-                }
-                
-                 
-                if ($data['authenticate']['pStatus'] == 'T') { 
-                     $this->authentication->sp_userAuditTrails(1,'Login','Warning','Account Inactive',$start); 
-                     return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Account Inactive.']);
-                }
-                
-                if ($data['authenticate']['usertype'] == "user") {
-
-                    
-                    session()->put('sub_applications', value: $this->authentication->sp_pf_common_sub_app_license([0,'',$database]));
-
-                    if(empty($this->authentication->get_identity($data['authenticate']['identityid']))){
-                       $this->authentication->sp_userAuditTrails(1,'Login','Warning','Successfully login but no identity created!',$start); 
-                       return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Successfully login but no identity created! please contact HR.']);
-                    }
-                
-                    $data['identity'] = $this->authentication->get_identity($data['authenticate']['identityid']);
-                    session()->put('identityId', value: $data['identity']['identityId']);
-
-                    session()->put('te_aprroval_count', value: 0);
-                    session()->put('ot_aprroval_count', value: 0);
-                    session()->put('leave_aprroval_count', value: 0);
-                    session()->put('ta_aprroval_count', value: 0);
-                    session()->put('ob_aprroval_count', value: 0);
-                    session()->put('os_aprroval_count', value: 0);
-                    session()->put('sc_aprroval_count', value: 0);
-                    session()->put('hrd_aprroval_count', value: 0);
-                    session()->put('app_time_interval', value: 1000); 
-                    session()->put('companyName', value:  $companyPasswordSettings['companyName']); 
-
-                    session()->put('emailHost', value: $companyPasswordSettings['smtpHost']);
-                    session()->put('emailPort', value: $companyPasswordSettings['smtpPort']);
-                    session()->put('emailFrom', value: $companyPasswordSettings['defaultSenderName']);
-
-                    session()->put('fullname', value: $data['identity']['firstName'] . " " . $data['identity']['lastName']);
-                    session()->put('password', value: $password);
-                    session()->put('encrypted_password', value: $e_password);
-
-                    //check On init
-                    //if change on init s required and user is first time login
-                    $pStatus = $data['authenticate']['pStatus'];
-                    $changeOnInit = $this->password_model->sp_portal_get_passwordChangeInitLogon();
-                    $changeOnInitString = $changeOnInit['rows'][0]->passwordChangeInitLogon;
-                    
-                    
-                    if ($pStatus == 'D' && $changeOnInitString == 1) {
-                        $this->authentication->sp_userAuditTrails(1,'Login','Warning','New user / Password need to update',$start); 
-                        session()->put('passwordStatus', 'new');
-                        session()->put('username', $username);
-                        return redirect()->route('new_password');
-                    }
-
-                    //session()->put('approver1', value: $this->authentication->sp_approval_get_authorizer([0, 1, $username]));
-                    session()->put('access_rights', value: $this->authentication->sp_approver_get_priviledge());
-    
-                    $user_details = $this->authentication->get_identity_sp([0, $username]);
- 
-                    session()->put('if_approver', $user_details['rows'][0]->if_approver);
-                    session()->put('faceDetails', $user_details['rows'][0]->faceDetails);
-
-                    // return redirect()->route('new_password');
-                    $deleteFaieldLogin = $this->password_model->sp_portal_update_user_attempt($username);
-                    $events = $this->calendar_model->load_sched_advanced(0,$username,'','');  
-                    
-                    if (!empty($deleteFaieldLogin) && isset($deleteFaieldLogin['num']) && $deleteFaieldLogin['num'] == 0) {
-                     
-                        session()->put('yearSched', date("Y"));  
-                        session()->put('currentEvents',$events);  
-                        session()->put('dash_edit_mode',0);  
-                        session()->put('currentUrl',$this->getBaseUrl());  
-                        session()->put('username', $username);
-
-                        $isMafActive = ($this->authentication->sp_portal_mfa_activation([0,$username])['rows'][0]->IsActive); 
-                        if($isMafActive){
-                            $this->authentication->sp_userAuditTrails(1,'Login','info','MFA Activated',$start); 
-                            return $this->send_mfa();
-                        }else{
-                           $this->authentication->sp_userAuditTrails(1,'Login','Success','',$start); 
-                           return $this->goto_Dashboard();
-                        } 
-                        //return redirect()->route('dash_cust');         
-                    }
-
-
-                } else {
-                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','User need to login in admin side',$start); 
-                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Use admin login.']); 
-                }
-
-            } else {
-
-                //password failed login
-                //insert pf-common user failed login table
-                $failedLogin = $this->password_model->sp_portal_insert_failed_login($username, $e_password, $database, $attempt + 1, $iAddress);
-
-                // //update users table
-                $this->password_model->sp_portal_update_user_attempt_lock($username, $attempt + 1);
-
-                if (!empty($failedLogin) && isset($failedLogin['num']) && $failedLogin['num'] == 0) {
-                    $logAttempts =$companyPasswordSettings['logAttempts'];
-                    $logs = $this->password_model->sp_portal_get_failed_login($username);
-                    $attempt_count = $logs['rows'][0]->attempts;  
-                    $lockMsg = ($attempt_count>=$logAttempts) ? "Your account has been locked for manny log attemps" : 'Incorrect username or password. attempt(s) count '.$attempt_count."/".$logAttempts;
-                    $this->authentication->sp_userAuditTrails(1,'Login','Warning',$lockMsg,$start); 
- 
-                    /*                     
-                        header("Location: ".$currentUrl, true, 301);
-                        exit(); 
-                        return redirect()->route('getHostName', ['hostName' => $hostName]); 
-                    */
-                    //return redirect()->route('getHostName', ['hostName' => "msipf"])->withErrors(['password' =>$lockMsg]); 
-                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(['password' =>$lockMsg]);
-                    
-                } else {
-                    $this->authentication->sp_userAuditTrails(1,'Login','Warning',"Unkwon System Error",$start); 
-                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(['password' => 'Error occured.']); 
-                }
-
-
-            }
-       
     }
 
     function tenant_addHost($url){  
@@ -3446,7 +3163,277 @@ class Traffic extends Controller
     }
 
   
+    //login post
+    public function login(Request $request){  
+ 
   
+            $start  = microtime(true);
+           
+            if(session()->get('is_authenticated')){
+                return redirect()->route('dash_cust'); 
+            }
+            
+            $_SESSION["detailsApproverHistory"] = 0;
+            $request->validate([
+                'username' => 'required',
+                'password' => 'required',
+                'database' => 'required',
+            ]);
+
+
+            $username = $request->input('username');
+            $password = $request->input('password');
+            $database = $request->input('database');
+
+
+            $setupIncomplete = $this->authentication->sp_kiosk_lookups([0]);  
+            if(!empty($setupIncomplete['rows'][0]->error_msg)){  
+                echo '<div style="background-color: #FA555A; padding:20px; color:white;width:500px">
+                    <h1>Dear, Pay Factor Team</h1>
+
+                    <div>The system cannot continue because the following errors were detected due to incomplete patching of SQL in production server:</div>
+                
+                    <div style="background-color:#4A3738; font-size:13px; padding:10px; margin-top:10px;margin-bottom:10px">'.$setupIncomplete['rows'][0]->error_msg.'</div>
+                Please review and resolve these issues before attempting to proceed.
+                </div>'; 
+                return;
+            } 
+            
+            session()->put('database', $database);
+
+            DB::purge('mysql');
+            config(['database.connections.mysql.database' => $database]);
+            DB::reconnect('mysql');
+
+            //if password not encrypted or new registered using bulk upload
+            $userdetails = $this->authentication->authenticate_account_per_user($username);
+            if(count($userdetails)!==0){
+                $isPassEncrypted =($this->authentication->f_endecrypt($userdetails['password'], 'd', $username));
+                if($isPassEncrypted==""){ 
+                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','New user / Password need to update',$start); 
+                    session()->put('passwordStatus', 'new');
+                    session()->put('username', $username);
+                    return redirect()->route('new_password');
+                }
+            }
+
+
+            $companyPasswordSettings = $this->company_password->get_company_password_details();
+            $captchaCode = $request->input('captcha_code') ?? null;
+
+    
+            if (isset($companyPasswordSettings['enableCaptcha']) && $captchaCode==null) {
+                $this->authentication->sp_userAuditTrails(1,'Login','Warning','Captha Required',$start); 
+                return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Captch is required']);  
+            }
+            
+            if ($captchaCode) {
+                $correctCaptcha = Session::get('captcha') ?? null;
+                if ($captchaCode != $correctCaptcha) {  
+                    $this->authentication->setCaptchaAttempt(1);
+                    $num = session()->get('captcha_attemp'); 
+                    $wait_until = session()->get('wait_until'); 
+                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','Incorrect Captha',$start); 
+                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Incorrect captcha. '.$num.' attempt(s)']); 
+                }else{
+                    session()->put('multi', value : null);
+                    $this->authentication->setCaptchaAttempt(0);
+                }
+            }  
+             
+
+            $e_username = $this->authentication->f_endecrypt($username, 'e', $username);
+            $e_password = $this->authentication->f_endecrypt($password, 'e', $username);
+            
+
+            $iAddress = $this->authentication->getIPAddress();
+            
+            $companyPasswordSettings['password'] = $this->authentication->f_endecrypt($companyPasswordSettings['password'], 'd', 'ftsi');
+            $default_mailer = $this->authentication->sp_get_default_mailer([0]);
+
+            session()->put('companyPasswordSettings', value: $companyPasswordSettings);
+            
+            $default_mailer['rows'][0]->smtp_pass = $this->authentication->f_endecrypt($default_mailer['rows'][0]->smtp_pass, 'd', 'ftsi');
+            session()->put('default_mailer', value: $default_mailer['rows'][0]);
+            
+            
+            $data['authenticate'] = $this->authentication->authenticate_account($username, $e_password);
+            $data['user_exists'] = $this->authentication->check_if_username_exists($username);
+            session()->put('username', $username);
+            
+            if(empty($data['user_exists'])){
+             $this->authentication->sp_userAuditTrails(1,'Login','Warning','Invalid Username:'.$username.' or Password ???',$start); 
+             return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Invalid Username or Password!']); 
+            }
+    
+         
+            // ***************************** lockout feature ******************* 
+            $attempt = $this->password_model->sp_portal_get_lock_attempt($username);  
+            $attempt = $attempt['rows'][0]->attempts;
+            
+            
+            $lockoutType = $this->password_model->sp_portal_get_lockedOutRecoveryType();
+            $lockoutType = $lockoutType['rows'][0]->lockedOutRecoveryType;
+
+            $is_already_locked = $this->password_model->get_employee_lockout_auto_status($username);
+  
+            
+            if($is_already_locked){  // if access already locked 
+                $this->authentication->sp_userAuditTrails(1,'Login','Warning',"Account Locked with attempt count -> ".($attempt+1),$start);
+                if ($lockoutType == 'auto') { 
+                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Account Locked Please Try Again Later.']);
+                }else{ 
+                   return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Your account has been locked out. Contact your system admin.']);
+                } 
+            } 
+             
+
+            if (!empty($data['authenticate'])) {
+
+                $is_already_locked = $this->password_model->get_employee_lockout_auto_status($username); 
+                if($is_already_locked){  // if access already locked 
+                    $this->authentication->sp_userAuditTrails(1,'Login','Warning',"Account Locked with attempt count -> ".($attempt+1),$start);
+                    if ($lockoutType == 'auto') { 
+                        return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Account Locked Please Try Again Later.']);
+                    }else{ 
+                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Your account has been locked out. Contact your system admin.']);
+                    } 
+                } 
+
+
+                $passwordReuseCount = $this->password_model->sp_portal_get_user_password_logs($username, $e_password);
+
+                $passwordReuseCountString = $passwordReuseCount['rows'][0]->passwordCount;
+
+                if ($passwordReuseCountString == 0 || $passwordReuseCountString == null) {
+                    $this->password_model->sp_portal_insert_password_logs($username, $e_password);
+
+                }
+                 
+                $isExpired = $this->password_model->isPasswordExpired($username);
+                if ($isExpired) {
+                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','Password Expired',$start); 
+                    session()->put('username', $username);
+                    session()->put('passwordStatus', 'expired');
+                    return redirect()->route('new_password');
+                }
+                
+                 
+                if ($data['authenticate']['pStatus'] == 'T') { 
+                     $this->authentication->sp_userAuditTrails(1,'Login','Warning','Account Inactive',$start); 
+                     return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Account Inactive.']);
+                }
+                
+                if ($data['authenticate']['usertype'] == "user") {
+
+                    
+                    session()->put('sub_applications', value: $this->authentication->sp_pf_common_sub_app_license([0,'',$database]));
+
+                    if(empty($this->authentication->get_identity($data['authenticate']['identityid']))){
+                       $this->authentication->sp_userAuditTrails(1,'Login','Warning','Successfully login but no identity created!',$start); 
+                       return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Successfully login but no identity created! please contact HR.']);
+                    }
+                
+                    $data['identity'] = $this->authentication->get_identity($data['authenticate']['identityid']);
+                    session()->put('identityId', value: $data['identity']['identityId']);
+
+                    session()->put('te_aprroval_count', value: 0);
+                    session()->put('ot_aprroval_count', value: 0);
+                    session()->put('leave_aprroval_count', value: 0);
+                    session()->put('ta_aprroval_count', value: 0);
+                    session()->put('ob_aprroval_count', value: 0);
+                    session()->put('os_aprroval_count', value: 0);
+                    session()->put('sc_aprroval_count', value: 0);
+                    session()->put('hrd_aprroval_count', value: 0);
+                    session()->put('app_time_interval', value: 1000); 
+                    session()->put('companyName', value:  $companyPasswordSettings['companyName']); 
+
+                    session()->put('emailHost', value: $companyPasswordSettings['smtpHost']);
+                    session()->put('emailPort', value: $companyPasswordSettings['smtpPort']);
+                    session()->put('emailFrom', value: $companyPasswordSettings['defaultSenderName']);
+
+                    session()->put('fullname', value: $data['identity']['firstName'] . " " . $data['identity']['lastName']);
+                    session()->put('password', value: $password);
+                    session()->put('encrypted_password', value: $e_password);
+
+                    //check On init
+                    //if change on init s required and user is first time login
+                    $pStatus = $data['authenticate']['pStatus'];
+                    $changeOnInit = $this->password_model->sp_portal_get_passwordChangeInitLogon();
+                    $changeOnInitString = $changeOnInit['rows'][0]->passwordChangeInitLogon;
+                    
+                    
+                    if ($pStatus == 'D' && $changeOnInitString == 1) {
+                        $this->authentication->sp_userAuditTrails(1,'Login','Warning','New user / Password need to update',$start); 
+                        session()->put('passwordStatus', 'new');
+                        session()->put('username', $username);
+                        return redirect()->route('new_password');
+                    }
+
+                    //session()->put('approver1', value: $this->authentication->sp_approval_get_authorizer([0, 1, $username]));
+                    session()->put('access_rights', value: $this->authentication->sp_approver_get_priviledge());
+    
+                    $user_details = $this->authentication->get_identity_sp([0, $username]);
+ 
+                    session()->put('if_approver', $user_details['rows'][0]->if_approver);
+                    session()->put('faceDetails', $user_details['rows'][0]->faceDetails);
+
+                    // return redirect()->route('new_password');
+                    $deleteFaieldLogin = $this->password_model->sp_portal_update_user_attempt($username);
+                    $events = $this->calendar_model->load_sched_advanced(0,$username,'','');  
+                    
+                    if (!empty($deleteFaieldLogin) && isset($deleteFaieldLogin['num']) && $deleteFaieldLogin['num'] == 0) {
+                     
+                        session()->put('yearSched', date("Y"));  
+                        session()->put('currentEvents',$events);  
+                        session()->put('dash_edit_mode',0);  
+                        session()->put('currentUrl',$this->getBaseUrl());  
+                        session()->put('username', $username);
+
+                        $isMafActive = ($this->authentication->sp_portal_mfa_activation([0,$username])['rows'][0]->IsActive); 
+                        if($isMafActive){
+                            $this->authentication->sp_userAuditTrails(1,'Login','info','MFA Activated',$start); 
+                            return $this->send_mfa();
+                        }else{
+                           $this->authentication->sp_userAuditTrails(1,'Login','Success','',$start); 
+                           return $this->goto_Dashboard();
+                        } 
+                        //return redirect()->route('dash_cust');         
+                    }
+
+
+                } else {
+                    $this->authentication->sp_userAuditTrails(1,'Login','Warning','User need to login in admin side',$start); 
+                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(provider: ['password' => 'Use admin login.']);
+                    // return back()->withErrors(['password' => 'Use admin login.']);
+                }
+
+            } else {
+
+                //password failed login
+                //insert pf-common user failed login table
+                $failedLogin = $this->password_model->sp_portal_insert_failed_login($username, $e_password, $database, $attempt + 1, $iAddress);
+
+                // //update users table
+                $this->password_model->sp_portal_update_user_attempt_lock($username, $attempt + 1);
+
+                if (!empty($failedLogin) && isset($failedLogin['num']) && $failedLogin['num'] == 0) {
+                    $logAttempts =$companyPasswordSettings['logAttempts'];
+                    $logs = $this->password_model->sp_portal_get_failed_login($username);
+                    $attempt_count = $logs['rows'][0]->attempts;  
+                    $lockMsg = ($attempt_count>=$logAttempts) ? "Your account has been locked for manny log attemps" : 'Incorrect username or password. attempt(s) count '.$attempt_count."/".$logAttempts;
+                    $this->authentication->sp_userAuditTrails(1,'Login','Warning',$lockMsg,$start); 
+                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(['password' =>$lockMsg]);
+                    
+                } else {
+                    $this->authentication->sp_userAuditTrails(1,'Login','Warning',"Unkwon System Error",$start); 
+                    return redirect()->route('login',['hostName' => session()->get('hostName')])->withErrors(['password' => 'Error occured.']); 
+                }
+
+
+            }
+       
+    }
 
     public function gotoFaceRecognizer(){
       
@@ -3489,6 +3476,20 @@ class Traffic extends Controller
 
         return $base_url;
     }
+
+    /* public function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'];
+        $script_name = $_SERVER['SCRIPT_NAME']; 
+        $base_url = $protocol . "://$host" . dirname($script_name);
+          
+        
+        if(session()->get('initHostName')!==""){
+                $base_url = "https://".session()->get('initHostName').".smartbooks.ph/kiosk";
+        }
+
+        return $base_url;
+    } */
     
     public function generate_captcha()
     {

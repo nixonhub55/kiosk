@@ -100,7 +100,7 @@ class TenancyController extends Controller
 
         session()->put('hostName', value:$hostName); 
         session()->put('active', value:1); 
-        return redirect('http://mdb4.payfactor.ft:8083/kiosk?hostName='.$hostName); 
+        return redirect('https://pf.smartbooks.ph/kiosk?hostName='.$hostName); 
     }  
 
 }

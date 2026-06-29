@@ -288,9 +288,11 @@
             var items=[];
             var num = chkbox_list.length - 1; 
             for (let i = 0; i <= num; i++) { 
+                  if(document.getElementById(chkbox_list[i])){
                   var id = document.getElementById(chkbox_list[i]).value;
                   var remarks = document.getElementById('txt'+document.getElementById(chkbox_list[i]).name).value;
                   items.push({"id":id,"remarks":remarks});  
+                  }
             } 
 
             var formData = new FormData();

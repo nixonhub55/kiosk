@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) { 
         
-        //$middleware->append(CheckInternetConnection::class); // disable this for no internet connection
+        $middleware->append(CheckInternetConnection::class); // disable this for no internet connection
 
         $middleware->alias(['isAuthenticated' => \App\Http\Middleware\CheckSession::class]);
     }) 

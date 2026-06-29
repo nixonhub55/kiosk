@@ -33,7 +33,8 @@ function GetMinDate(txtId){
     return minDate;
 }
 
-function EnterPassModal2(this_width,code){  
+function EnterPassModal2(this_width,code){ 
+    
     this.this_code = code;
     var modal = document.getElementById("modal_enterpass");
     div.style.maxWidth = this_width; 
@@ -154,6 +155,26 @@ function EnterPassword(txtPass,divMsg){
     }
 }
 
+/* 
+    function GlovalHTMLObjLoading(num,obj_id){ 
+        
+        const words = ['Processing', 'Loading', 'Executing', 'Please wait','Working','In progress','Running']; 
+        const randomWord = words[Math.floor(Math.random() * words.length)];
+
+        if (document.getElementById(obj_id) !== null){
+            document.getElementById(obj_id).focus();
+            if (num==1){
+                CurrentInnerHtml = document.getElementById(obj_id).innerHTML; 
+                document.getElementById(obj_id).innerHTML = "<b>"+randomWord+"</b> <i class='fa fa-spinner fa-spin'></i>&nbsp;";
+                document.getElementById(obj_id).disabled = true;
+            }else{ 
+                document.getElementById(obj_id).innerHTML = CurrentInnerHtml;
+                document.getElementById(obj_id).disabled = false;
+            }
+        }
+    }
+ */
+
 function GlovalHTMLObjLoading(num,obj_id){ 
      
     const words = ['Processing', 'Loading', 'Executing', 'Please wait','Working','In progress','Running']; 
@@ -178,7 +199,26 @@ function GlovalHTMLObjLoading(num,obj_id){
     }
 }
 
-function ForApprovalStatus(appStatus){   
+
+function ForApprovalStatus(appStatus){  
+    /* if (refreshNum==0){
+        CurrentInnerHtml = btns_div.innerHTML;
+    }
+    if(appStatus=="F"){  
+        var checkbox = document.getElementById('verification_checkbox');
+       
+        if(checkbox !== null){
+            var label = document.querySelector(`label[for='${checkbox.id}']`); 
+            btns_div.innerHTML="";
+            checkbox.style.display="none"; 
+            label.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i>  Note: You cannot Edit application [Pending] for approval!"
+            label.style.color = 'red';   
+        }
+        
+ 
+    }else{
+        btns_div.innerHTML = CurrentInnerHtml;
+    } */
 
     if (refreshNum==0){
          CurrentInnerHtml = (btns_div) ? btns_div.innerHTML : '';
@@ -378,18 +418,35 @@ function CloasePopupInformMessage(id){ /*spanInfo*/
     } 
 }
 
-function isValidJSONObject(str) {
-    try {
-        const parsed = JSON.parse(str);
-        return typeof parsed === "object" && parsed !== null;
-    } catch {
-        return false;
-    }
+/* async function exec_XMLHttpRequest(formData,this_page) { 
+    refreshNum = 0;
+    CloasePopupInformMessage('spanInfo');
+    return new Promise((resolve, reject) => {
+       var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+       var xhr = new XMLHttpRequest();
+       xhr.open('POST', this_page, true);
+       xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);  
+       xhr.onload = function () {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            //console.log(xhr.responseText);  
+             resolve(JSON.parse(xhr.responseText)); 
+          } else {
+             reject(new Error('Request failed with status: ' + xhr.status));   
+             //reject(xhr.responseText); 
+          }  
+       }; 
+       xhr.onerror = function () {
+          reject(new Error('Network error occurred')); 
+       }; 
+       xhr.send(formData); 
+    }); 
 }
+ */
+
 
 
 function saveErrorLogs(log){ 
- 
+
     try {
         let logs = JSON.parse(localStorage.getItem('errorLogs')) || [];
         logs.push(log);
@@ -400,9 +457,10 @@ function saveErrorLogs(log){
 
 }
 
-async function exec_XMLHttpRequest(formData,this_page) {   
+
+ async function exec_XMLHttpRequest(formData,this_page) {   
     refreshNum = 0;
-    saveErrorLogs(({'logId':0,'identityId':identityId,'formData':formData, 'time' :  new Date(),'errorMsg' :'Test'}));
+    //saveErrorLogs(({'logId':0,'identityId':identityId,'formData':formData, 'time' :  new Date(),'errorMsg' :'Test'}));
     CloasePopupInformMessage('spanInfo');
     return new Promise((resolve, reject) => {
        var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -413,20 +471,20 @@ async function exec_XMLHttpRequest(formData,this_page) {
           if (xhr.status >= 200 && xhr.status < 300) {  
              resolve(JSON.parse(xhr.responseText)); 
           } else {
-             console.log(1);
+             saveErrorLogs(({'logId':1,'identityId':identityId,'formData':formData, 'time' :  new Date(),'errorMsg' : xhr.responseText}));
              reject(new Error('Request failed with status: ' + xhr.status));   
              //reject(xhr.responseText); 
-             saveErrorLogs(({'logId':1,'identityId':identityId,'formData':formData, 'time' :  new Date(),'errorMsg' : xhr.responseText}));
           }  
        }; 
        xhr.onerror = function () {
            //console.log(2);
-          reject(new Error('Network error occurred')); 
-          saveErrorLogs(({'logId':2,'identityId':identityId,'formData':formData, 'time' :  new Date(),'errorMsg' : new Error('Network error occurred')}));
+           saveErrorLogs(({'logId':2,'identityId':identityId,'formData':formData, 'time' :  new Date(),'errorMsg' : new Error('Network error occurred')}));
+          reject(new Error('Network error occurred'));  
        }; 
        xhr.send(formData); 
     }); 
 }
+ 
  
 
 async function ExexStoredProc_GET(sp_name, parameters) {
@@ -472,9 +530,7 @@ async function ExexStoredProc_GET(sp_name, parameters) {
 async function EditCert(num,mode) {  
     const formData = new FormData();
     formData.append('appNo', num);  
-    formData.append('mode', mode);  
-    //await call_route(formData, '{{url("/hrd_application_dtls")}}');
-    //await call_route(formData, 'http://mdb4.payfactor.ft:8083/portal/hrd_application_dtls');
+    formData.append('mode', mode);   
     await call_route(formData, baseUrl+'/hrd_application_dtls'); 
 }
 
@@ -935,8 +991,6 @@ async function SetSession(sessionName,val){
     await call_page_into_div(formData,"set_session");   
 }
 
-
-
 window.addEventListener('DOMContentLoaded', () => { 
     const sidebarToggle = document.querySelector('#sidebarToggle');
 
@@ -953,10 +1007,39 @@ window.addEventListener('DOMContentLoaded', () => {
             'sb|sidebar-toggle',
             document.body.classList.contains('sb-sidenav-toggled')
         );
-    }); 
-
-
+    });
 });
 
 
- 
+
+
+/* 
+function TableRowsCheckUncheck(hdr_box,myTable){ 
+    var checkbox_checked = document.getElementById(hdr_box).checked;
+
+
+    let table = document.getElementById(myTable); 
+    let tbody = table.getElementsByTagName("tbody")[0]; 
+    let rows = tbody.getElementsByTagName("tr");
+
+    
+    try {
+          var num = rows.length - 1; 
+          for (let i = 0; i <= num; i++) {
+          var new_checkbox = 'chkbox'+i;
+          var this_checkbox = document.getElementById(new_checkbox); 
+          this_checkbox.checked = checkbox_checked; 
+                if (checkbox_checked){ 
+                      if (chkbox_list.indexOf(new_checkbox) === -1) {
+                           chkbox_list.push(new_checkbox);
+                      } 
+                }else{
+                      chkbox_list = [];
+          } 
+    }  
+    } catch (error) { 
+    } 
+   show_approve_btn(myTable); 
+  
+
+} */

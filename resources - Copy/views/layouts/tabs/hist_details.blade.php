@@ -1,0 +1,864 @@
+ 
+<div class="container custom-container">
+<?php
+      $appNo = 0;
+      $appStatus = 0;
+?>
+
+    @if($num==0) <!-- OVERTIME -->
+
+        <?php 
+            $app_detail = $app_details['rows'][0]; 
+            $appNo = $app_detail->otAppNo;
+            $appStatus = $app_detail->r_decision;
+
+        ?>
+        <form class="row g-3">
+                    <div class="col-md-12">
+                        <div class="row">
+                                <div class="col-md-4">
+                                    <label for="appNumber" class="form-label">Application Number</label>
+                                    <input type="text" class="form-control" id="appNumber"  value="<?=$app_detail->otAppNo?>" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="appDate" class="form-label">Application Date</label>
+                                    <input type="text" class="form-control" id="appDate" value="<?=$app_detail->otAppDate?>" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="appCostCenter" class="form-label">Cost Center</label>
+                                    <input type="text" class="form-control" id="appCostCenter" value="<?=$app_detail->otCosCenter?>" readonly>
+                                </div>
+                        </div>
+                    </div>   
+                    <div class="col-md-12">
+                        <div class="row">
+                                <div class="col-md-4">
+                                    <label for="appEmployeeId" class="form-label">Employee ID</label>
+                                    <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->otID?>" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="appEmployeeName" class="form-label">Employee Name</label>
+                                    <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->otName?>"
+                                            readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="appDepartment" class="form-label">Department</label>
+                                    <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->department?>" readonly>
+                                </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-12">
+                        <div class="row">
+                                <div class="col-md-4">
+                                    <label for="appEmployeeId" class="form-label">OT Date</label>
+                                    <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->otDate?>" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="appEmployeeName" class="form-label">Time</label>
+                                    <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->otTimeFrom?> To <?=$app_detail->otTimeTo?>"
+                                            readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="appDepartment" class="form-label">OT Tot. Hours</label>
+                                    <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->otTotHours?>" readonly>
+                                </div>
+                        </div>
+                    </div>
+ 
+                    <div class="col-md-12">
+                        <div class="row">
+                                <div class="col-md-12">
+                                    <label for="appEmployeeId" class="form-label">OT Reason</label>
+                                    <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->otReason?>" readonly>
+                                </div> 
+                        </div> 
+                    </div>  
+
+
+                    <div class="col-md-12" id="divWizard"></div>
+
+                    <div class="modal-footer">
+                        @if($app_detail->r_decision=="D")  
+                        <div class="col-md-12">
+                            <div class="row"> 
+                                    <div class="col-md-12">
+                                    <label for="appEmployeeId" class="form-label fw-bold">Checker Remarks</label> 
+                                    <div class="alert alert-danger"><?=$app_detail->r_remarks?></div>
+                                    </div> 
+                            </div> 
+                        </div>
+                        @endif 
+                        
+                        <div class="col-md-12"> 
+                            <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="appEmployeeId" class="form-label fw-bold">Last Checked By:</label> 
+                                        <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approverName?></label> 
+                                    </div> 
+                                    <div class="col-md-6"> 
+                                        <div class="float-end">
+                                            <label for="appEmployeeId" class="form-label fw-bold">Checked Date:</label> 
+                                            <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approvedDate?></label>
+                                        </div> 
+                                    </div> 
+                            </div>  
+                        </div> 
+
+                    </div>
+
+            </form>
+    @endif
+
+    @if($num==1) <!-- LEAVE -->
+        <?php 
+            $app_detail = $app_details['rows'][0]; 
+            $appNo = $app_detail->laAppNo;
+            $appStatus = $app_detail->r_decision;
+
+        ?>
+        <form class="row g-3">
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appNumber" class="form-label">Application Number</label>
+                              <input type="text" class="form-control" id="appNumber"  value="<?=$app_detail->laAppNo?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDate" class="form-label">Application Date</label>
+                              <input type="text" class="form-control" id="appDate" value="<?=$app_detail->laAppDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appCostCenter" class="form-label">Cost Center</label>
+                              <input type="text" class="form-control" id="appCostCenter" value="<?=$app_detail->costName?>" readonly>
+                        </div>
+                  </div>
+            </div>    
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Employee ID</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->laID?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Employee Name</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->laName?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Department</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->departmentName?>" readonly>
+                        </div>
+                  </div>
+            </div> 
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Leave Type</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->laType?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Balance</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->laBalance?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Location</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->locationName?>" readonly>
+                        </div>
+                  </div>
+            </div>
+ 
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-6">
+                              <label for="appEmployeeId" class="form-label">Date From</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->laDateFrom?>" readonly>
+                        </div>
+                        <div class="col-md-6">
+                              <label for="appEmployeeName" class="form-label">Date To</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->laDateTo?>"
+                                    readonly>
+                        </div> 
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-12">
+                              <table class="table table-striped">
+                              <thead class="table-dark">
+                                    <tr>
+                                    <th>#</th>
+                                    <th><i class="far fa-calendar-alt"></i>&nbsp;&nbsp;Date</th>
+                                    <th><i class="fas fa-history"></i>&nbsp;&nbsp;Day part</th>
+                                    </tr>
+                              </thead>  
+                              <tbody> 
+                              @foreach($sched_list['rows'] as $rows)
+                                    <tr>
+                                          <td>{{$rows->laLstID}}</td>
+                                          <td>{{$rows->laLstDate}} - {{$rows->laLstDateDesc}}</td>
+                                          <td>{{$rows->laSchedDesc}}</td>
+                                    </tr> 
+                              @endforeach 
+                              </tbody>
+                              </table>
+                        </div> 
+                  </div>
+            </div>
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-12">
+                              <label for="appEmployeeId" class="form-label">Leave Reason</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->laReason?>" readonly>
+                        </div> 
+                  </div> 
+            </div>
+             
+            <div class="col-md-12" id="divWizard"></div>
+
+            <div class="modal-footer">
+                @if($app_detail->r_decision=="D")  
+                <div class="col-md-12">
+                    <div class="row"> 
+                            <div class="col-md-12">
+                            <label for="appEmployeeId" class="form-label fw-bold">Checker Remarks</label> 
+                            <div class="alert alert-danger"><?=$app_detail->r_remarks?></div>
+                            </div> 
+                    </div> 
+                </div>
+                @endif
+
+                
+                <div class="col-md-12"> 
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label for="appEmployeeId" class="form-label fw-bold">Last Checked By:</label> 
+                                <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approverName?></label> 
+                            </div> 
+                            <div class="col-md-6"> 
+                                <div class="float-end">
+                                    <label for="appEmployeeId" class="form-label fw-bold">Checked Date:</label> 
+                                    <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approvedDate?></label>
+                                </div> 
+                            </div> 
+                    </div>  
+                </div>
+            </div>
+
+      </form>
+    @endif
+ 
+    @if($num==2) <!-- TIME ADJUSTMENT -->
+        <?php 
+            $taAppNo="";
+            $app_detail = $app_details['rows'][0];
+            $appNo = $app_detail->taAppNo;
+            $appStatus = $app_detail->r_decision;
+        ?>
+        <form class="row g-3">
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appNumber" class="form-label">Application Number</label>
+                              <input type="text" class="form-control" id="appNumber"  value="<?=$app_detail->taAppNo?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDate" class="form-label">Application Date</label>
+                              <input type="text" class="form-control" id="appDate" value="<?=$app_detail->taAppDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appCostCenter" class="form-label">Cost Center</label>
+                              <input type="text" class="form-control" id="appCostCenter" value="<?=$app_detail->costName?>" readonly>
+                        </div>
+                  </div>
+            </div>   
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Employee ID</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->taID?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Employee Name</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->taName?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Department</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->departmentName?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Date Adjsutment</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->taDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Adjustment Type</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->taType?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Adjustment Time</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->taTime?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-12">
+                              <label for="appEmployeeId" class="form-label">Adjustment Reason</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->taReason?>" readonly>
+                        </div> 
+                  </div> 
+            </div>
+
+            <div class="col-md-12" id="divWizard"></div>
+            
+            <div class="modal-footer">
+                @if($app_detail->r_decision=="D")  
+                <div class="col-md-12">
+                    <div class="row"> 
+                            <div class="col-md-12">
+                            <label for="appEmployeeId" class="form-label fw-bold">Checker Remarks</label> 
+                            <div class="alert alert-danger"><?=$app_detail->r_remarks?></div>
+                            </div> 
+                    </div> 
+                </div>
+                @endif
+                <div class="col-md-12"> 
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label for="appEmployeeId" class="form-label fw-bold">Last Checked By:</label> 
+                                <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approverName?></label> 
+                            </div> 
+                            <div class="col-md-6"> 
+                                <div class="float-end">
+                                    <label for="appEmployeeId" class="form-label fw-bold">Checked Date:</label> 
+                                    <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approvedDate?></label>
+                                </div> 
+                            </div> 
+                    </div>  
+                </div>
+            </div>
+             
+        </form>
+    @endif
+
+    @if($num==3) <!-- OFFICIAL BUSINESS -->
+        <?php
+            $obAppNo="";
+            $app_detail = $app_details['rows'][0];
+            $appNo = $app_detail->obAppNo;
+            $appStatus = $app_detail->r_decision;
+        ?>
+        <form class="row g-3">
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appNumber" class="form-label">Application Number</label>
+                              <input type="text" class="form-control" id="appNumber"  value="<?=$app_detail->obAppNo?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDate" class="form-label">Application Date</label>
+                              <input type="text" class="form-control" id="appDate" value="<?=$app_detail->obAppDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appCostCenter" class="form-label">Cost Center</label>
+                              <input type="text" class="form-control" id="appCostCenter" value="<?=$app_detail->costName?>" readonly>
+                        </div>
+                  </div>
+            </div>   
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Employee ID</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->obID?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Employee Name</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->obName?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Department</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->departmentName?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row"> 
+                        <div class="col-md-12">
+                              <label for="appDepartment" class="form-label">OB Type</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->obType?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+            
+            @if($app_detail->obType=="Days")   
+                <div class="col-md-12">
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label for="ob_from_date" class="form-label">App. Date From</label>
+                                <input type="text" class="form-control" id="ob_from_date" value="<?=$app_detail->obDateFrom?>" readonly>
+                            </div> 
+
+                            <div class="col-md-6">
+                                <label for="ob_from_date" class="form-label">App. Date To</label>
+                                <input type="text" class="form-control" id="ob_from_date" value="<?=$app_detail->obDateTo?>" readonly>
+                            </div>
+                    </div> 
+                </div>
+
+
+                <div class="col-md-12">
+                    <div class="row"> <!-- Days Details -->
+                        <div class="col-md-12" id="divDaysDetails">  
+                                
+                                <div class="row reltv">  
+                                    <div class="col-md-12"> 
+                                    <table id="tbl1" class="table table-striped"> 
+                                            <thead  class="table-dark">
+                                                <tr>
+                                                        <th><center>Date <i class="far fa-calendar-alt"></i></center></th>
+                                                        <th><center>Location <i class="fas fa-map-marker-alt"></i></center></th>
+                                                        <th><center>From <i class="fas fa-sign-in-alt"></i></center></th>
+                                                        <th><center>To <i class="fas fa-sign-out-alt"></i></center></th>
+                                                        <th><center>Total</center></th> 
+                                                </tr> 
+                                            </thead>
+                                            <tbody id="tb1_tbody"> 
+                                                @foreach($days_sced['rows'] as $rows)
+                                                <tr>
+                                                    <td>{{$rows->obLstDate}}</td>
+                                                    <td>{{$rows->locationName}}</td>
+                                                    <td>{{$rows->obLstTimeFrom}}</td>
+                                                    <td>{{$rows->obLstTimeTo}}</td>
+                                                    <td>{{$rows->obLstTotHours}}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                    </table>
+                                    </div> 
+                                </div>
+
+                        </div>
+                    </div>
+                </div> 
+            @else
+                <div class="col-md-12">
+                    <div class="row"> 
+                            <div class="col-md-4">
+                                <label for="appDepartment" class="form-label">Date</label>
+                                <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->obAppDate?>" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="appDepartment" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->obLocation?>" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="appDepartment" class="form-label">Time</label>
+                                <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->obTime?>" readonly>
+                            </div>
+                    </div>
+                </div>
+            @endif
+            
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-12">
+                              <label for="appEmployeeId" class="form-label">Reason</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->obReason?>" readonly>
+                        </div> 
+                  </div> 
+            </div>
+
+            <div class="col-md-12" id="divWizard"></div>
+
+            <div class="modal-footer">
+                @if($app_detail->r_decision=="D")  
+                <div class="col-md-12">
+                    <div class="row"> 
+                            <div class="col-md-12">
+                            <label for="appEmployeeId" class="form-label fw-bold">Checker Remarks</label> 
+                            <div class="alert alert-danger"><?=$app_detail->r_remarks?></div>
+                            </div> 
+                    </div> 
+                </div>
+                @endif
+                <div class="col-md-12"> 
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label for="appEmployeeId" class="form-label fw-bold">Last Checked By:</label> 
+                                <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approverName?></label> 
+                            </div> 
+                            <div class="col-md-6"> 
+                                <div class="float-end">
+                                    <label for="appEmployeeId" class="form-label fw-bold">Checked Date:</label> 
+                                    <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approvedDate?></label>
+                                </div> 
+                            </div> 
+                    </div>  
+                </div>
+            </div>
+             
+        </form>
+    @endif
+
+    @if($num==4) <!-- OFFSET -->
+        <?php
+        
+            $osAppNo="";
+            $app_detail = $app_details['rows'][0];
+            $appNo = $app_detail->osAppNo;
+            $appStatus = $app_detail->r_decision;
+            
+        ?>
+        <form class="row g-3">
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appNumber" class="form-label">Application Number</label>
+                              <input type="text" class="form-control" id="appNumber"  value="<?=$app_detail->osAppNo?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDate" class="form-label">Application Date</label>
+                              <input type="text" class="form-control" id="appDate" value="<?=$app_detail->osAppDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appCostCenter" class="form-label">Cost Center</label>
+                              <input type="text" class="form-control" id="appCostCenter" value="<?=$app_detail->osCosCenter?>" readonly>
+                        </div>
+                  </div>
+            </div>   
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Employee ID</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->osID?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Employee Name</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->osName?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Department</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->department?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row"> 
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Offset Type</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->osType?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Offset Date From</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->osDateFrom?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Offset Date To</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->osDateTo?>"
+                                    readonly>
+                        </div>
+                  </div>
+            </div>
+
+            <div class="col-md-12">
+                  <div class="row"> 
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Location</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->locationName?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Offset Time From</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->osTimeFrom?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Offset Time To</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->osTimeTo?>"
+                                    readonly>
+                        </div>
+                  </div>
+            </div>
+ 
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-12">
+                              <label for="appEmployeeId" class="form-label">Reason</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->osReason?>" readonly>
+                        </div> 
+                  </div> 
+            </div>
+            
+            <div class="col-md-12" id="divWizard"></div>
+
+            <div class="modal-footer">
+                @if($app_detail->r_decision=="D")  
+                <div class="col-md-12">
+                    <div class="row"> 
+                            <div class="col-md-12">
+                            <label for="appEmployeeId" class="form-label fw-bold">Checker Remarks</label> 
+                            <div class="alert alert-danger"><?=$app_detail->r_remarks?></div>
+                            </div> 
+                    </div> 
+                </div>
+                @endif
+                <div class="col-md-12"> 
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label for="appEmployeeId" class="form-label fw-bold">Last Checked By:</label> 
+                                <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approverName?></label> 
+                            </div> 
+                            <div class="col-md-6"> 
+                                <div class="float-end">
+                                    <label for="appEmployeeId" class="form-label fw-bold">Checked Date:</label> 
+                                    <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approvedDate?></label>
+                                </div> 
+                            </div> 
+                    </div>  
+                </div>
+            </div>  
+      </form>
+    @endif 
+
+    @if($num==5) <!-- TIME ENTRY -->
+        <?php 
+            $teAppNo="";
+            $app_detail = $app_details['rows'][0];
+            $appNo = $app_detail->teAppNo;
+            $appStatus = $app_detail->r_decision;
+        ?>
+        <form class="row g-3">
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appNumber" class="form-label">Application Number</label>
+                              <input type="text" class="form-control" id="appNumber"  value="<?=$app_detail->teAppNo?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDate" class="form-label">Application Date</label>
+                              <input type="text" class="form-control" id="appDate" value="<?=$app_detail->teAppDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appCostCenter" class="form-label">Cost Center</label>
+                              <input type="text" class="form-control" id="appCostCenter" value="<?=$app_detail->costName?>" readonly>
+                        </div>
+                  </div>
+            </div>   
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Employee ID</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->teID?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Employee Name</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->teName?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Department</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->departmentName?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Date Adjsutment</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->teDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Adjustment Type</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->teType?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Adjustment Time</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->teTime?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-12">
+                              <label for="appEmployeeId" class="form-label">Adjustment Reason</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->teReason?>" readonly>
+                        </div> 
+                  </div> 
+            </div>
+
+            <div class="col-md-12" id="divWizard"></div>
+            
+            <div class="modal-footer">
+                @if($app_detail->r_decision=="D")  
+                <div class="col-md-12">
+                    <div class="row"> 
+                            <div class="col-md-12">
+                            <label for="appEmployeeId" class="form-label fw-bold">Checker Remarks</label> 
+                            <div class="alert alert-danger"><?=$app_detail->r_remarks?></div>
+                            </div> 
+                    </div> 
+                </div>
+                @endif
+                <div class="col-md-12"> 
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label for="appEmployeeId" class="form-label fw-bold">Last Checked By:</label> 
+                                <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approverName?></label> 
+                            </div> 
+                            <div class="col-md-6"> 
+                                <div class="float-end">
+                                    <label for="appEmployeeId" class="form-label fw-bold">Checked Date:</label> 
+                                    <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approvedDate?></label>
+                                </div> 
+                            </div> 
+                    </div>  
+                </div>
+            </div>
+             
+        </form>
+    @endif
+
+
+    @if($num==6) <!-- SCHEDULE -->
+        <?php 
+            $scAppNo="";
+            $app_detail = $app_details['rows'][0];
+            $appNo = $app_detail->scAppNo;
+            $appStatus = $app_detail->r_decision;
+        ?>
+        <form class="row g-3">
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appNumber" class="form-label">Application Number</label>
+                              <input type="text" class="form-control" id="appNumber"  value="<?=$app_detail->scAppNo?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDate" class="form-label">Application Date</label>
+                              <input type="text" class="form-control" id="appDate" value="<?=$app_detail->scAppDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appCostCenter" class="form-label">Cost Center</label>
+                              <input type="text" class="form-control" id="appCostCenter" value="<?=$app_detail->costName?>" readonly>
+                        </div>
+                  </div>
+            </div>   
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Employee ID</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->scID?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Employee Name</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->scName?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Department</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->departmentName?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-4">
+                              <label for="appEmployeeId" class="form-label">Date Request</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->scAppDate?>" readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appEmployeeName" class="form-label">Previous Schedule</label>
+                              <input type="text" class="form-control" id="appEmployeeName" value="<?=$app_detail->scPreviousSched?>"
+                                    readonly>
+                        </div>
+                        <div class="col-md-4">
+                              <label for="appDepartment" class="form-label">Requested Schedule</label>
+                              <input type="text" class="form-control" id="appDepartment" value="<?=$app_detail->scSchedule?>" readonly>
+                        </div>
+                  </div>
+            </div>
+
+
+            <div class="col-md-12">
+                  <div class="row">
+                        <div class="col-md-12">
+                              <label for="appEmployeeId" class="form-label">Adjustment Reason</label>
+                              <input type="text" class="form-control" id="appEmployeeId" value="<?=$app_detail->scReason?>" readonly>
+                        </div> 
+                  </div> 
+            </div>
+
+            <div class="col-md-12" id="divWizard"></div>
+            
+            <div class="modal-footer">
+                @if($app_detail->r_decision=="D")  
+                <div class="col-md-12">
+                    <div class="row"> 
+                            <div class="col-md-12">
+                            <label for="appEmployeeId" class="form-label fw-bold">Checker Remarks</label> 
+                            <div class="alert alert-danger"><?=$app_detail->r_remarks?></div>
+                            </div> 
+                    </div> 
+                </div>
+                @endif
+                <div class="col-md-12"> 
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label for="appEmployeeId" class="form-label fw-bold">Last Checked By:</label> 
+                                <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approverName?></label> 
+                            </div> 
+                            <div class="col-md-6"> 
+                                <div class="float-end">
+                                    <label for="appEmployeeId" class="form-label fw-bold">Checked Date:</label> 
+                                    <label for="appEmployeeId" class="form-label"><?=$app_detail->r_approvedDate?></label>
+                                </div> 
+                            </div> 
+                    </div>  
+                </div>
+            </div>
+             
+        </form>
+    @endif
+     
+ </div>
+
+ <script>
+ 
+
+      var formData = new FormData(); 
+      formData.append('switch',<?=$num?>);
+      formData.append('appNo',<?=$appNo?>);
+      LoadPage('{{url("/wizard")}}','divWizard',formData); 
+ 
+      ForApprovalStatus('<?=$appStatus?>');
+
+ </script>

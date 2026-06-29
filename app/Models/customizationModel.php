@@ -60,7 +60,7 @@ class customizationModel extends Model
         $extracted_db = [];
  
 
-        $client_db[] =["hostName" => "mdb4", "dbName" => "mdb_demo_v4"];
+         
         $client_db[] =["hostName" => "msipf", "dbName" => "materials_solutions_inc"];
         $client_db[] =["hostName" => "pfstand", "dbName" => "aaisiv4"];
         $client_db[] =["hostName" => "ftlive4", "dbName" => "cambe_dental_inc"];
@@ -84,10 +84,7 @@ class customizationModel extends Model
 
      public function company_customization(){
 
-        $client_host = $_SERVER['HTTP_HOST']; 
-        $client_host = explode(':', $client_host)[0];
-        $client_host = explode('.', $client_host)[0];
-
+       
         /* $customized_elements = [];
 
         $customized_elements[] = ["name" => "dtr","visibility" =>1];
@@ -103,8 +100,8 @@ class customizationModel extends Model
          
         return $customized_elements; */
          
-         $user_data = ["hostName" =>$client_host ];
-         $this->pfcommonmodel->pf_common_exec_store_proc('sp_tenants_table',[0,json_encode($user_data)]);
+         $user_data = ["hostName" =>session()->get('hostName') ];
+         $this->pfcommonmodel->pf_common_exec_store_proc('sp_tenants_table',[0,json_encode($user_data)]);  
          return $this->pf_common_exec_store_proc('sp_host_companySettings', [0,session()->get('hostName')]);
 
     } 

@@ -23,7 +23,6 @@
             if($errNum!==0){ 
                echo "<div style='background-color:#f88d6d; color:white' class='form-control'><i class='fa-solid fa-triangle-exclamation'></i> ".$errMsg."</div></br>";
             }
- 
         ?>
  
         @if($num==1) 

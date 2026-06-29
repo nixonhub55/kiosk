@@ -1,15 +1,12 @@
 <?php
 
 use App\Http\Controllers\Traffic;
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\TenancyController;
 use App\Http\Controllers\MailController;
 use App\Http\Middleware\CheckSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Http;
-use App\Http\Controllers\DashboardController; 
+use App\Http\Controllers\DashboardController;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
@@ -66,7 +63,6 @@ Route::middleware('isAuthenticated')->group(function () {
   Route::match(['get', 'post'], '/empSchedule', [Traffic::class, 'empSchedule'])->name('empSchedule');
   Route::match(['get', 'post'], '/assets/{param}', [Traffic::class, 'show_assets'])->name('assets'); 
   Route::match(['get', 'post'], '/testphp', [Traffic::class, 'testPHP'])->name(name: 'testphp');
-  Route::match(['get', 'post'], '/compensationAndBenefits', [Traffic::class, 'compensationAndBenefits'])->name(name: 'compensationAndBenefits');
 
  
  
@@ -185,12 +181,6 @@ Route::match(['get', 'post'], '/timeentry_approval', [Traffic::class, 'show_Time
 
   //CLEARANCE - ray 11/11/2025
   Route::match(['get', 'post'], '/clearance', [Traffic::class, 'show_clearance_form'])->name('clearance');
-  Route::match(['get', 'post'], '/clearance_approval', [Traffic::class, 'show_clearance_approval'])->name('clearance_approval');
-  Route::match(['get', 'post'], '/clearance_approval_details', [Traffic::class, 'show_clearance_approval_details'])->name('clearance_approval_details');
-  Route::match(['get', 'post'], '/update_clearance_approval_details', [Traffic::class, 'update_clearance_approval_details'])->name('update_clearance_approval_details');
-  Route::match(['get', 'post'], '/clearance_approval_hr', [Traffic::class, 'show_clearance_approval_hr'])->name('clearance_approval_hr');
-  Route::match(['get', 'post'], '/clearance_hr_view', [Traffic::class, 'show_clearance_hr_view'])->name('clearance_hr_view');
-  Route::match(['get', 'post'], '/clearance_acknowledge', [Traffic::class, 'clearance_acknowledge'])->name('clearance_acknowledge');
 
   //Authority to Deduct
   Route::match(['get', 'post'], '/authority_to_deduct', [Traffic::class, 'show_authority_to_deduct'])->name('authority_to_deduct');
@@ -202,13 +192,9 @@ Route::match(['get', 'post'], '/timeentry_approval', [Traffic::class, 'show_Time
   //My Profile Details
   Route::match(['get', 'post'], '/my_profile_details', [Traffic::class, 'show_myProfile_Details'])->name('my_profile_details');
   Route::match(['get', 'post'], '/my_profile_details_edit', [Traffic::class, 'edit_myProfile_Details'])->name('my_profile_details_edit');
-  Route::match(['get', 'post'], '/my_profile_details_contact_edit', [Traffic::class, 'edit_myProfile_contact'])->name('my_profile_details_contact_edit');
 
   Route::match(['get', 'post'], '/my_profile_payroll', [Traffic::class, 'myProfilePayroll'])->name('my_profile_payroll');
-
-  //Appraisal Form
-  Route::match(['get', 'post'], '/appraisal_form_view_supervisor', [Traffic::class, 'show_appraisal_form_supervisor'])->name('appraisal_form_view_supervisor');
-    Route::match(['get', 'post'], '/appraisal_supervisor_approver', [Traffic::class, 'show_appraisal_supervisor_approval'])->name('appraisal_supervisor_approver');
+  
 
   //reports routes
   Route::match(['get', 'post'], '/payslip_record', [Traffic::class, 'payslip_record'])->name('payslip_record');
@@ -236,32 +222,6 @@ Route::match(['get', 'post'], '/timeentry_approval', [Traffic::class, 'show_Time
   Route::match(['get', 'post'], '/modal.show/{param}', [Traffic::class, 'show'])->name('modal.show');
 
   Route::match(['get', 'post'], '/change_password', [Traffic::class, 'change_password'])->name('change_password');
-
-  Route::post('/ai-chat', [AIChatController::class, 'chat']);
-  Route::post('/ai-chat', [ChatController::class, 'chat']);
-  Route::view('/chatbot', 'chat');
-  
-  
- //Route::match(['get', 'post'], '/chat', [Traffic::class, 'chat'])->name('chat');
-
-/* Route::get('/test-gemini', function () {
-
-    $response = Http::post(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . env('GEMINI_API_KEY'),
-        [
-            'contents' => [
-                [
-                    'parts' => [
-                        ['text' => 'Hello']
-                    ]
-                ]
-            ]
-        ]
-    );
-
-    return $response->json();
-}); */
-
 
 });
 // require __DIR__ . 
