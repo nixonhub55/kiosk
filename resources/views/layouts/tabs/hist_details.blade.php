@@ -231,7 +231,7 @@ use PhpParser\Node\Stmt\Echo_;
                                                      
                                                     @if($dateToday<=$rows->laLstDate) 
                                                     @endif    
-                                                   @if(($isHoliday || $dateToday<=$rows->laLstDate) && session()->get('hostName')=="pocpf")
+                                                   @if(($isHoliday || $dateToday<=$rows->laLstDate) && session()->get('hostName')=="msipf")
                                                       <i class="bi bi-x-circle-fill text-danger" onclick="return deleteLeave('{{$appNo}}','{{$rows->laLstID}}','{{$rows->laLstDate}}')"></i></button>
                                                     @endif 
                                                 </td>

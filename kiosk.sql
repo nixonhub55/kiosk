@@ -13279,10 +13279,9 @@ DELIMITER ;
 
 
 
-DROP PROCEDURE IF EXISTS sp_approved_leave_date;
-DELIMITER $$  
-CREATE PROCEDURE sp_approved_leave_date  
-( 
+DELIMITER $$ 
+DROP PROCEDURE IF EXISTS `sp_approved_leave_date`$$ 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_approved_leave_date`( 
     IN pint_mode INT,	
     IN rAppNo INT,  
     IN rId INT,  
@@ -13290,14 +13289,13 @@ CREATE PROCEDURE sp_approved_leave_date
     OUT msg VARCHAR(300)
 )
 proc_start:BEGIN 
-
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	BEGIN
 		GET DIAGNOSTICS CONDITION 1 @errorMessage = MESSAGE_TEXT;
 		ROLLBACK;
 		SET num = 1;
 		SET msg = CONCAT('{
-				"id":"lbltxtCancelRemarks",
+				"id":"lblTbl",
 				"msg":"Approval for application No.',rAppNo,' failed. ',@errorMessage,'"	
 			       }'); 
 	END;
@@ -13306,12 +13304,20 @@ proc_start:BEGIN
 	SET num = 0;
 	SET msg = 'OK';
 	 
+	-- SET num = 1; SET msg = CONCAT('{ "id":"lblTbl", "msg":"TEST Return" }'); LEAVE proc_start;
+	SET @rAppNo = rAppNo;
+	SET @rId = rId;
+	
+	-- SET @rAppNo = 2; SET @rId = 2; 
+	IF NOT EXISTS (SELECT 1 FROM leaveapplicationlist WHERE laLstAppNo=@rAppNo AND laLstID<>@rId) THEN 
+		SET num = 1; 
+		SET msg = CONCAT('{ "id":"lblTbl", "msg":"Sorry, you cant delete all leaves of application!" }'); 
+		LEAVE proc_start;
+	END IF;
          
         START TRANSACTION; 
 		
-		SET @rAppNo = rAppNo;
-		SET @rId = rId;
-		-- SET @rAppNo = 21887; SET @rId = 3;
+		
 			
 			-- TRUNCATE TABLE deletedleaveapplicationlist
 			-- SELECT * FROM leaveapplicationform WHERE laAppNo=@rAppNo
@@ -13350,10 +13356,9 @@ proc_start:BEGIN
 			
 			-- SELECT *,@newLaDateTo FROM employeeleavebalances where `code`=@code AND leaveCode=@laLstType;
 		 
-
 	COMMIT;
  
-END $$ 
+END$$ 
 DELIMITER ;
 
 
