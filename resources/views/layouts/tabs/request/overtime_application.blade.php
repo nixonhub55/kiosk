@@ -226,9 +226,11 @@
                   } 
                   GlovalHTMLObjLoading(0,objID); 
             }else{
-                   console.clear();  console.log(response);
-                  GlovalHTMLObjLoading(1,objID); 
-                  //window.location.href='{{url("/overtime_application")}}'; 
+                  /* 
+                        console.clear();  console.log(response);
+                        GlovalHTMLObjLoading(1,objID);  
+                  */
+                  window.location.href='{{url("/overtime_application")}}'; 
             }
       } 
 
